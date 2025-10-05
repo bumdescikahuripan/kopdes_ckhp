@@ -1,0 +1,1888 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Koperasi Desa Merah Putih Cikahuripan</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            box-sizing: border-box;
+        }
+        .gradient-bg {
+            background: linear-gradient(135deg, #dc2626 0%, #ffffff 50%, #dc2626 100%);
+        }
+        .card-shadow {
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+        .animate-fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        /* Print Receipt Styles */
+        .receipt-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        
+        .receipt-content {
+            background: white;
+            border-radius: 12px;
+            max-width: 90%;
+            max-height: 90%;
+            overflow-y: auto;
+        }
+        
+        .receipt-paper {
+            width: 148mm; /* A5 width */
+            min-height: 210mm; /* A5 height */
+            background: white;
+            padding: 20mm;
+            font-family: 'Courier New', monospace;
+            color: #000;
+            position: relative;
+        }
+        
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            .receipt-paper, .receipt-paper * {
+                visibility: visible;
+            }
+            .receipt-paper {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 148mm;
+                height: 210mm;
+                margin: 0;
+                padding: 15mm;
+                box-shadow: none;
+            }
+            .no-print {
+                display: none !important;
+            }
+        }
+        
+        .receipt-header {
+            text-align: center;
+            border-bottom: 2px solid #000;
+            padding-bottom: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .receipt-row {
+            display: flex;
+            justify-content: space-between;
+            margin: 5px 0;
+            padding: 2px 0;
+        }
+        
+        .receipt-separator {
+            border-top: 1px dashed #000;
+            margin: 10px 0;
+        }
+        
+        .receipt-total {
+            border-top: 2px solid #000;
+            border-bottom: 2px solid #000;
+            padding: 8px 0;
+            margin: 10px 0;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Header -->
+    <header class="gradient-bg text-white py-6 shadow-lg">
+        <div class="container mx-auto px-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-4">
+                    <div class="w-12 h-12 bg-white rounded-full flex items-center justify-center">
+                        <span class="text-red-600 font-bold text-xl">🏛️</span>
+                    </div>
+                    <div>
+                        <h1 class="text-2xl font-bold">Koperasi Desa Merah Putih</h1>
+                        <p class="text-sm opacity-90">Cikahuripan, Klapanunggal, Bogor - Jawa Barat</p>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <span id="currentUser" class="text-sm bg-white bg-opacity-20 px-3 py-1 rounded-full"></span>
+                    <button onclick="logout()" class="bg-white bg-opacity-20 hover:bg-opacity-30 px-4 py-2 rounded-lg transition-all">
+                        Keluar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Login Form -->
+    <div id="loginForm" class="min-h-screen flex items-center justify-center px-4">
+        <div class="bg-white rounded-2xl card-shadow p-8 w-full max-w-md animate-fade-in">
+            <div class="text-center mb-8">
+                <div class="w-20 h-20 bg-red-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <span class="text-white text-3xl">🏛️</span>
+                </div>
+                <h2 class="text-2xl font-bold text-gray-800">Masuk ke Aplikasi</h2>
+                <p class="text-gray-600 mt-2">Koperasi Desa Merah Putih Cikahuripan</p>
+            </div>
+            
+            <form onsubmit="login(event)" class="space-y-6">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Nomor Anggota / Admin ID</label>
+                    <input type="text" id="loginId" required 
+                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                           placeholder="Masukkan nomor anggota atau admin">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Password</label>
+                    <input type="password" id="loginPassword" required 
+                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                           placeholder="Masukkan password">
+                </div>
+                <button type="submit" 
+                        class="w-full bg-red-600 hover:bg-red-700 text-white font-semibold py-3 rounded-lg transition-colors">
+                    Masuk
+                </button>
+            </form>
+            
+            <div class="mt-6 text-center text-sm text-gray-600">
+                <p>Login pertama kali sebagai admin:</p>
+                <p><strong>Username:</strong> admin</p>
+                <p><strong>Password:</strong> admin123</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Member Dashboard -->
+    <div id="memberDashboard" class="hidden container mx-auto px-4 py-8">
+        <div class="mb-8">
+            <h2 class="text-3xl font-bold text-gray-800 mb-2">Dashboard Anggota</h2>
+            <p class="text-gray-600">Selamat datang di portal anggota koperasi</p>
+        </div>
+
+        <!-- Member Stats Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <div class="bg-white rounded-xl card-shadow p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm text-gray-600">Total Simpanan</p>
+                        <p class="text-2xl font-bold text-green-600" id="memberSavings">Rp 0</p>
+                    </div>
+                    <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                        <span class="text-green-600 text-xl">💰</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-white rounded-xl card-shadow p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm text-gray-600">Total Hutang</p>
+                        <p class="text-2xl font-bold text-red-600" id="memberDebt">Rp 0</p>
+                    </div>
+                    <div class="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center">
+                        <span class="text-red-600 text-xl">📋</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-white rounded-xl card-shadow p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm text-gray-600">Sisa Angsuran</p>
+                        <p class="text-2xl font-bold text-orange-600" id="memberInstallment">0 bulan</p>
+                    </div>
+                    <div class="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
+                        <span class="text-orange-600 text-xl">⏰</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-white rounded-xl card-shadow p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm text-gray-600">SHU Tahun Ini</p>
+                        <p class="text-2xl font-bold text-blue-600" id="memberSHU">Rp 0</p>
+                    </div>
+                    <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                        <span class="text-blue-600 text-xl">🎯</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Member Details -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <!-- Transaction History -->
+            <div class="bg-white rounded-xl card-shadow p-6">
+                <h3 class="text-xl font-bold text-gray-800 mb-4">Riwayat Transaksi Terbaru</h3>
+                <div id="memberTransactions" class="space-y-4">
+                    <div class="text-center py-8 text-gray-500">
+                        <p>Belum ada transaksi</p>
+                        <p class="text-sm">Transaksi akan muncul di sini setelah admin menambahkan data</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Loan Details -->
+            <div class="bg-white rounded-xl card-shadow p-6">
+                <h3 class="text-xl font-bold text-gray-800 mb-4">Detail Pinjaman</h3>
+                <div id="memberLoans" class="space-y-4">
+                    <div class="text-center py-8 text-gray-500">
+                        <p>Belum ada pinjaman aktif</p>
+                        <p class="text-sm">Hubungi admin untuk mengajukan pinjaman</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Admin Dashboard -->
+    <div id="adminDashboard" class="hidden container mx-auto px-4 py-8">
+        <div class="mb-8">
+            <h2 class="text-3xl font-bold text-gray-800 mb-2">Dashboard Admin</h2>
+            <p class="text-gray-600">Panel administrasi koperasi</p>
+        </div>
+
+        <!-- Admin Stats -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <div class="bg-white rounded-xl card-shadow p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm text-gray-600">Total Anggota</p>
+                        <p class="text-2xl font-bold text-blue-600" id="totalMembers">0</p>
+                    </div>
+                    <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                        <span class="text-blue-600 text-xl">👥</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-white rounded-xl card-shadow p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm text-gray-600">Total Simpanan</p>
+                        <p class="text-2xl font-bold text-green-600" id="totalSavings">Rp 0</p>
+                    </div>
+                    <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                        <span class="text-green-600 text-xl">💰</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-white rounded-xl card-shadow p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm text-gray-600">Total Pinjaman</p>
+                        <p class="text-2xl font-bold text-red-600" id="totalLoans">Rp 0</p>
+                    </div>
+                    <div class="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center">
+                        <span class="text-red-600 text-xl">📋</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-white rounded-xl card-shadow p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm text-gray-600">SHU Tahun Ini</p>
+                        <p class="text-2xl font-bold text-purple-600" id="totalSHU">Rp 0</p>
+                    </div>
+                    <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
+                        <span class="text-purple-600 text-xl">🎯</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Admin Navigation -->
+        <div class="bg-white rounded-xl card-shadow p-6 mb-8">
+            <div class="flex flex-wrap gap-4">
+                <button onclick="showAdminSection('members')" 
+                        class="admin-nav-btn bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg transition-colors">
+                    Kelola Anggota
+                </button>
+                <button onclick="showAdminSection('transactions')" 
+                        class="admin-nav-btn bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg transition-colors">
+                    Transaksi
+                </button>
+                <button onclick="showAdminSection('loans')" 
+                        class="admin-nav-btn bg-orange-600 hover:bg-orange-700 text-white px-6 py-3 rounded-lg transition-colors">
+                    Pinjaman
+                </button>
+                <button onclick="showAdminSection('shu')" 
+                        class="admin-nav-btn bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-lg transition-colors">
+                    Update SHU
+                </button>
+                <button onclick="showAdminSection('reports')" 
+                        class="admin-nav-btn bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-lg transition-colors">
+                    Laporan
+                </button>
+            </div>
+        </div>
+
+        <!-- Admin Sections -->
+        <div id="adminMembers" class="admin-section bg-white rounded-xl card-shadow p-6">
+            <h3 class="text-xl font-bold text-gray-800 mb-4">Kelola Anggota</h3>
+            <div class="mb-4">
+                <button onclick="showAddMemberForm()" 
+                        class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors">
+                    + Tambah Anggota
+                </button>
+            </div>
+            
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-4 py-3 text-left">No. Anggota</th>
+                            <th class="px-4 py-3 text-left">Nama</th>
+                            <th class="px-4 py-3 text-left">Simpanan</th>
+                            <th class="px-4 py-3 text-left">Pinjaman</th>
+                            <th class="px-4 py-3 text-left">Status</th>
+                            <th class="px-4 py-3 text-left">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody id="membersTableBody" class="divide-y divide-gray-200">
+                        <tr>
+                            <td colspan="6" class="px-4 py-8 text-center text-gray-500">
+                                Belum ada anggota terdaftar. Klik "Tambah Anggota" untuk memulai.
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="adminTransactions" class="admin-section hidden bg-white rounded-xl card-shadow p-6">
+            <h3 class="text-xl font-bold text-gray-800 mb-4">Kelola Transaksi</h3>
+            <div class="mb-4">
+                <button onclick="showAddTransactionForm()" 
+                        class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors">
+                    + Tambah Transaksi
+                </button>
+            </div>
+            
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-4 py-3 text-left">Tanggal</th>
+                            <th class="px-4 py-3 text-left">Anggota</th>
+                            <th class="px-4 py-3 text-left">Jenis</th>
+                            <th class="px-4 py-3 text-left">Jumlah</th>
+                            <th class="px-4 py-3 text-left">Keterangan</th>
+                            <th class="px-4 py-3 text-left">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody id="transactionsTableBody" class="divide-y divide-gray-200">
+                        <tr>
+                            <td colspan="6" class="px-4 py-8 text-center text-gray-500">
+                                Belum ada transaksi. Klik "Tambah Transaksi" untuk memulai.
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="adminLoans" class="admin-section hidden bg-white rounded-xl card-shadow p-6">
+            <h3 class="text-xl font-bold text-gray-800 mb-4">Kelola Pinjaman</h3>
+            <div class="mb-4">
+                <button onclick="showAddLoanForm()" 
+                        class="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-lg transition-colors">
+                    + Tambah Pinjaman
+                </button>
+            </div>
+            
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-4 py-3 text-left">Anggota</th>
+                            <th class="px-4 py-3 text-left">Jenis Pinjaman</th>
+                            <th class="px-4 py-3 text-left">Jumlah</th>
+                            <th class="px-4 py-3 text-left">Sisa Hutang</th>
+                            <th class="px-4 py-3 text-left">Tenor</th>
+                            <th class="px-4 py-3 text-left">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="loansTableBody" class="divide-y divide-gray-200">
+                        <tr>
+                            <td colspan="6" class="px-4 py-8 text-center text-gray-500">
+                                Belum ada pinjaman. Klik "Tambah Pinjaman" untuk memulai.
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="adminSHU" class="admin-section hidden bg-white rounded-xl card-shadow p-6">
+            <h3 class="text-xl font-bold text-gray-800 mb-4">Update SHU Koperasi</h3>
+            
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <div>
+                    <h4 class="text-lg font-semibold mb-4">Input SHU Tahun 2024</h4>
+                    <form onsubmit="updateSHU(event)" class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Total Pendapatan</label>
+                            <input type="number" id="totalRevenue" 
+                                   class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
+                                   placeholder="Masukkan total pendapatan" value="0">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Total Biaya Operasional</label>
+                            <input type="number" id="totalCosts" 
+                                   class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
+                                   placeholder="Masukkan total biaya" value="0">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Persentase untuk Anggota (%)</label>
+                            <input type="number" id="memberPercentage" 
+                                   class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
+                                   placeholder="Masukkan persentase" value="60" min="0" max="100">
+                        </div>
+                        <button type="submit" 
+                                class="w-full bg-purple-600 hover:bg-purple-700 text-white font-semibold py-3 rounded-lg transition-colors">
+                            Hitung dan Update SHU
+                        </button>
+                    </form>
+                </div>
+                
+                <div>
+                    <h4 class="text-lg font-semibold mb-4">Hasil Perhitungan SHU</h4>
+                    <div class="space-y-4">
+                        <div class="p-4 bg-gray-50 rounded-lg">
+                            <p class="text-sm text-gray-600">SHU Bersih</p>
+                            <p class="text-2xl font-bold text-green-600" id="netSHU">Rp 0</p>
+                        </div>
+                        <div class="p-4 bg-gray-50 rounded-lg">
+                            <p class="text-sm text-gray-600">Bagian Anggota (60%)</p>
+                            <p class="text-xl font-bold text-blue-600" id="memberSHUTotal">Rp 0</p>
+                        </div>
+                        <div class="p-4 bg-gray-50 rounded-lg">
+                            <p class="text-sm text-gray-600">Rata-rata per Anggota</p>
+                            <p class="text-xl font-bold text-purple-600" id="avgSHUPerMember">Rp 0</p>
+                        </div>
+                        <div class="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                            <p class="text-sm text-yellow-800">Status Distribusi</p>
+                            <p class="font-bold text-yellow-800" id="distributionStatus">Belum ada data</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="adminReports" class="admin-section hidden bg-white rounded-xl card-shadow p-6">
+            <h3 class="text-xl font-bold text-gray-800 mb-4">Laporan Koperasi</h3>
+            
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+                <button onclick="generateReport('monthly')" 
+                        class="bg-blue-600 hover:bg-blue-700 text-white p-4 rounded-lg transition-colors">
+                    <div class="text-center">
+                        <div class="text-2xl mb-2">📊</div>
+                        <div class="font-semibold">Laporan Bulanan</div>
+                        <div class="text-sm opacity-90">Transaksi & Keuangan</div>
+                    </div>
+                </button>
+                
+                <button onclick="generateReport('member')" 
+                        class="bg-green-600 hover:bg-green-700 text-white p-4 rounded-lg transition-colors">
+                    <div class="text-center">
+                        <div class="text-2xl mb-2">👥</div>
+                        <div class="font-semibold">Laporan Anggota</div>
+                        <div class="text-sm opacity-90">Data & Aktivitas</div>
+                    </div>
+                </button>
+                
+                <button onclick="generateReport('loan')" 
+                        class="bg-orange-600 hover:bg-orange-700 text-white p-4 rounded-lg transition-colors">
+                    <div class="text-center">
+                        <div class="text-2xl mb-2">💰</div>
+                        <div class="font-semibold">Laporan Pinjaman</div>
+                        <div class="text-sm opacity-90">Status & Angsuran</div>
+                    </div>
+                </button>
+            </div>
+            
+            <div id="reportContent" class="hidden">
+                <div class="flex justify-between items-center mb-4">
+                    <h4 id="reportTitle" class="text-lg font-semibold"></h4>
+                    <div class="space-x-2">
+                        <button onclick="printReport()" 
+                                class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg">
+                            🖨️ Cetak
+                        </button>
+                        <button onclick="exportReport()" 
+                                class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg">
+                            📄 Export PDF
+                        </button>
+                    </div>
+                </div>
+                <div id="reportData" class="overflow-x-auto">
+                    <!-- Report data will be inserted here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Receipt Modal -->
+    <div id="receiptModal" class="receipt-modal hidden">
+        <div class="receipt-content">
+            <div class="receipt-paper" id="receiptPaper">
+                <!-- Receipt content will be generated here -->
+            </div>
+            <div class="no-print p-4 bg-gray-100 flex justify-center space-x-4">
+                <button onclick="printReceiptPaper()" 
+                        class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg">
+                    🖨️ Cetak / Print
+                </button>
+                <button onclick="downloadReceiptPDF()" 
+                        class="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg">
+                    📄 Download PDF
+                </button>
+                <button onclick="closeReceiptModal()" 
+                        class="bg-gray-600 hover:bg-gray-700 text-white px-6 py-2 rounded-lg">
+                    ✕ Tutup
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Initialize empty data structure
+        const users = {
+            'admin': {
+                type: 'admin',
+                password: 'admin123',
+                name: 'Administrator'
+            }
+        };
+
+        const transactions = [];
+        const loans = [];
+        let currentUser = null;
+        let transactionCounter = 1;
+        let loanCounter = 1;
+
+        function login(event) {
+            event.preventDefault();
+            
+            const loginId = document.getElementById('loginId').value;
+            const password = document.getElementById('loginPassword').value;
+            
+            if (users[loginId] && users[loginId].password === password) {
+                currentUser = users[loginId];
+                currentUser.id = loginId;
+                
+                document.getElementById('currentUser').textContent = 
+                    currentUser.type === 'admin' ? 'Admin' : `${currentUser.name} (${loginId})`;
+                
+                document.getElementById('loginForm').classList.add('hidden');
+                
+                if (currentUser.type === 'member') {
+                    showMemberDashboard();
+                } else {
+                    showAdminDashboard();
+                }
+            } else {
+                alert('Login gagal! Periksa nomor anggota dan password Anda.');
+            }
+        }
+
+        function logout() {
+            currentUser = null;
+            document.getElementById('loginForm').classList.remove('hidden');
+            document.getElementById('memberDashboard').classList.add('hidden');
+            document.getElementById('adminDashboard').classList.add('hidden');
+            document.getElementById('loginId').value = '';
+            document.getElementById('loginPassword').value = '';
+        }
+
+        function showMemberDashboard() {
+            document.getElementById('memberDashboard').classList.remove('hidden');
+            document.getElementById('memberDashboard').classList.add('animate-fade-in');
+            
+            // Update member data
+            document.getElementById('memberSavings').textContent = 
+                'Rp ' + (currentUser.savings || 0).toLocaleString('id-ID');
+            document.getElementById('memberDebt').textContent = 
+                'Rp ' + (currentUser.debt || 0).toLocaleString('id-ID');
+            document.getElementById('memberInstallment').textContent = 
+                (currentUser.installments || 0) + ' bulan';
+            document.getElementById('memberSHU').textContent = 
+                'Rp ' + (currentUser.shu || 0).toLocaleString('id-ID');
+            
+            // Load member transactions
+            loadMemberTransactions();
+            loadMemberLoans();
+        }
+
+        function showAdminDashboard() {
+            document.getElementById('adminDashboard').classList.remove('hidden');
+            document.getElementById('adminDashboard').classList.add('animate-fade-in');
+            showAdminSection('members');
+            updateAdminStats();
+        }
+
+        function showAdminSection(section) {
+            // Hide all sections
+            document.querySelectorAll('.admin-section').forEach(el => {
+                el.classList.add('hidden');
+            });
+            
+            // Show selected section
+            document.getElementById('admin' + section.charAt(0).toUpperCase() + section.slice(1)).classList.remove('hidden');
+        }
+
+        function updateAdminStats() {
+            let totalMembers = 0;
+            let totalSavings = 0;
+            let totalLoans = 0;
+            let totalSHU = 0;
+            
+            for (const [userId, userData] of Object.entries(users)) {
+                if (userData.type === 'member') {
+                    totalMembers++;
+                    totalSavings += userData.savings || 0;
+                    totalLoans += userData.debt || 0;
+                    totalSHU += userData.shu || 0;
+                }
+            }
+            
+            document.getElementById('totalMembers').textContent = totalMembers;
+            document.getElementById('totalSavings').textContent = 'Rp ' + totalSavings.toLocaleString('id-ID');
+            document.getElementById('totalLoans').textContent = 'Rp ' + totalLoans.toLocaleString('id-ID');
+            document.getElementById('totalSHU').textContent = 'Rp ' + totalSHU.toLocaleString('id-ID');
+        }
+
+        function showAddMemberForm() {
+            const formHTML = `
+                <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                    <div class="bg-white rounded-xl p-6 w-full max-w-md mx-4 max-h-screen overflow-y-auto">
+                        <h3 class="text-xl font-bold mb-4">Tambah Anggota Baru</h3>
+                        <form onsubmit="addMember(event)" class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Nomor Anggota</label>
+                                <input type="text" id="newMemberNumber" required 
+                                       class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                                       placeholder="Contoh: A001" pattern="A[0-9]{3}">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Nama Lengkap</label>
+                                <input type="text" id="newMemberName" required 
+                                       class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                                       placeholder="Masukkan nama lengkap">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">NIK</label>
+                                <input type="text" id="newMemberNIK" required 
+                                       class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                                       placeholder="16 digit NIK" pattern="[0-9]{16}" maxlength="16">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Alamat</label>
+                                <textarea id="newMemberAddress" required rows="3"
+                                          class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                                          placeholder="Alamat lengkap anggota"></textarea>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">No. Telepon</label>
+                                <input type="tel" id="newMemberPhone" required 
+                                       class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                                       placeholder="08xxxxxxxxxx">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Simpanan Awal (Rp)</label>
+                                <input type="number" id="newMemberSavings" required min="50000" 
+                                       class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                                       placeholder="Minimal Rp 50.000" value="50000">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Password Login</label>
+                                <input type="password" id="newMemberPassword" required minlength="6"
+                                       class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                                       placeholder="Minimal 6 karakter">
+                            </div>
+                            <div class="flex space-x-4 pt-4">
+                                <button type="submit" 
+                                        class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-lg transition-colors">
+                                    Daftarkan Anggota
+                                </button>
+                                <button type="button" onclick="closeMemberForm()" 
+                                        class="flex-1 bg-gray-600 hover:bg-gray-700 text-white font-semibold py-3 rounded-lg transition-colors">
+                                    Batal
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            `;
+            
+            document.body.insertAdjacentHTML('beforeend', formHTML);
+        }
+
+        function addMember(event) {
+            event.preventDefault();
+            
+            const memberNumber = document.getElementById('newMemberNumber').value;
+            const memberName = document.getElementById('newMemberName').value;
+            const memberNIK = document.getElementById('newMemberNIK').value;
+            const memberAddress = document.getElementById('newMemberAddress').value;
+            const memberPhone = document.getElementById('newMemberPhone').value;
+            const memberSavings = parseInt(document.getElementById('newMemberSavings').value);
+            const memberPassword = document.getElementById('newMemberPassword').value;
+            
+            // Check if member number already exists
+            if (users[memberNumber]) {
+                alert('Nomor anggota sudah terdaftar! Gunakan nomor yang berbeda.');
+                return;
+            }
+            
+            // Add to users object
+            users[memberNumber] = {
+                type: 'member',
+                password: memberPassword,
+                name: memberName,
+                nik: memberNIK,
+                address: memberAddress,
+                phone: memberPhone,
+                savings: memberSavings,
+                debt: 0,
+                installments: 0,
+                shu: 0
+            };
+            
+            // Update member table
+            updateMembersTable();
+            updateAdminStats();
+            
+            // Close form and show success
+            closeMemberForm();
+            alert(`Anggota berhasil didaftarkan!\nNomor: ${memberNumber}\nNama: ${memberName}\nSimpanan Awal: Rp ${memberSavings.toLocaleString('id-ID')}`);
+        }
+
+        function updateMembersTable() {
+            const tableBody = document.getElementById('membersTableBody');
+            let memberRows = '';
+            
+            let hasMembers = false;
+            for (const [memberId, memberData] of Object.entries(users)) {
+                if (memberData.type === 'member') {
+                    hasMembers = true;
+                    memberRows += `
+                        <tr>
+                            <td class="px-4 py-3">${memberId}</td>
+                            <td class="px-4 py-3">${memberData.name}</td>
+                            <td class="px-4 py-3 text-green-600">Rp ${(memberData.savings || 0).toLocaleString('id-ID')}</td>
+                            <td class="px-4 py-3 text-red-600">Rp ${(memberData.debt || 0).toLocaleString('id-ID')}</td>
+                            <td class="px-4 py-3"><span class="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs">Aktif</span></td>
+                            <td class="px-4 py-3">
+                                <button onclick="editMember('${memberId}')" class="text-blue-600 hover:text-blue-800 mr-2">Edit</button>
+                                <button onclick="deleteMember('${memberId}')" class="text-red-600 hover:text-red-800">Hapus</button>
+                            </td>
+                        </tr>
+                    `;
+                }
+            }
+            
+            if (!hasMembers) {
+                memberRows = `
+                    <tr>
+                        <td colspan="6" class="px-4 py-8 text-center text-gray-500">
+                            Belum ada anggota terdaftar. Klik "Tambah Anggota" untuk memulai.
+                        </td>
+                    </tr>
+                `;
+            }
+            
+            tableBody.innerHTML = memberRows;
+        }
+
+        function editMember(memberId) {
+            // Close any existing forms first
+            const existingForm = document.querySelector('.edit-member-form');
+            if (existingForm) {
+                existingForm.remove();
+            }
+            
+            const member = users[memberId];
+            if (!member) {
+                alert('Anggota tidak ditemukan!');
+                return;
+            }
+            
+            const formHTML = `
+                <div class="edit-member-form fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                    <div class="bg-white rounded-xl p-6 w-full max-w-md mx-4 max-h-screen overflow-y-auto">
+                        <h3 class="text-xl font-bold mb-4">Edit Anggota ${memberId}</h3>
+                        <form onsubmit="updateMember(event, '${memberId}')" class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Nama Lengkap</label>
+                                <input type="text" id="editMemberName_${memberId}" required value="${member.name}"
+                                       class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">NIK</label>
+                                <input type="text" id="editMemberNIK_${memberId}" required value="${member.nik || ''}"
+                                       class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                                       pattern="[0-9]{16}" maxlength="16">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Alamat</label>
+                                <textarea id="editMemberAddress_${memberId}" required rows="3"
+                                          class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">${member.address || ''}</textarea>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">No. Telepon</label>
+                                <input type="tel" id="editMemberPhone_${memberId}" required value="${member.phone || ''}"
+                                       class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Total Simpanan (Rp)</label>
+                                <input type="number" id="editMemberSavings_${memberId}" required value="${member.savings}"
+                                       class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Password Baru (kosongkan jika tidak diubah)</label>
+                                <input type="password" id="editMemberPassword_${memberId}" minlength="6"
+                                       class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                                       placeholder="Masukkan password baru">
+                            </div>
+                            <div class="flex space-x-4 pt-4">
+                                <button type="submit" 
+                                        class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-lg transition-colors">
+                                    Update Anggota
+                                </button>
+                                <button type="button" onclick="closeEditForm()" 
+                                        class="flex-1 bg-gray-600 hover:bg-gray-700 text-white font-semibold py-3 rounded-lg transition-colors">
+                                    Batal
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            `;
+            
+            document.body.insertAdjacentHTML('beforeend', formHTML);
+        }
+
+        function updateMember(event, memberId) {
+            event.preventDefault();
+            
+            const name = document.getElementById(`editMemberName_${memberId}`).value;
+            const nik = document.getElementById(`editMemberNIK_${memberId}`).value;
+            const address = document.getElementById(`editMemberAddress_${memberId}`).value;
+            const phone = document.getElementById(`editMemberPhone_${memberId}`).value;
+            const savings = parseInt(document.getElementById(`editMemberSavings_${memberId}`).value);
+            const password = document.getElementById(`editMemberPassword_${memberId}`).value;
+            
+            // Update user data
+            users[memberId].name = name;
+            users[memberId].nik = nik;
+            users[memberId].address = address;
+            users[memberId].phone = phone;
+            users[memberId].savings = savings;
+            
+            if (password) {
+                users[memberId].password = password;
+            }
+            
+            // Update tables and stats
+            updateMembersTable();
+            updateAdminStats();
+            
+            closeEditForm();
+            alert(`Data anggota ${memberId} berhasil diupdate!`);
+        }
+
+        function deleteMember(memberId) {
+            const member = users[memberId];
+            if (!member) {
+                alert('Anggota tidak ditemukan!');
+                return;
+            }
+            
+            if (confirm(`Apakah Anda yakin ingin menghapus anggota ${memberId} - ${member.name}?\n\nPerhatian: Data ini tidak dapat dikembalikan!`)) {
+                // Remove from users object
+                delete users[memberId];
+                
+                // Update tables and stats
+                updateMembersTable();
+                updateAdminStats();
+                
+                alert(`Anggota ${memberId} berhasil dihapus dari sistem.`);
+            }
+        }
+
+        function showAddTransactionForm() {
+            // Generate member options from users object
+            let memberOptions = '<option value="">Pilih Anggota</option>';
+            for (const [userId, userData] of Object.entries(users)) {
+                if (userData.type === 'member') {
+                    memberOptions += `<option value="${userId}">${userId} - ${userData.name}</option>`;
+                }
+            }
+            
+            if (memberOptions === '<option value="">Pilih Anggota</option>') {
+                alert('Belum ada anggota terdaftar. Tambahkan anggota terlebih dahulu.');
+                return;
+            }
+            
+            const formHTML = `
+                <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                    <div class="bg-white rounded-xl p-6 w-full max-w-md mx-4">
+                        <h3 class="text-xl font-bold mb-4">Tambah Transaksi Baru</h3>
+                        <form onsubmit="addTransaction(event)" class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Nomor Anggota</label>
+                                <select id="newTxnMember" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500">
+                                    ${memberOptions}
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Jenis Transaksi</label>
+                                <select id="newTxnType" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500">
+                                    <option value="">Pilih Jenis</option>
+                                    <option value="Simpanan Wajib">Simpanan Wajib</option>
+                                    <option value="Simpanan Sukarela">Simpanan Sukarela</option>
+                                    <option value="Angsuran Pinjaman">Angsuran Pinjaman</option>
+                                    <option value="Pinjaman Baru">Pinjaman Baru</option>
+                                    <option value="SHU">Pembagian SHU</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Jumlah (Rp)</label>
+                                <input type="number" id="newTxnAmount" required min="1000" 
+                                       class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
+                                       placeholder="Masukkan jumlah transaksi">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Keterangan</label>
+                                <textarea id="newTxnNote" rows="3" 
+                                          class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
+                                          placeholder="Keterangan tambahan (opsional)"></textarea>
+                            </div>
+                            <div class="flex space-x-4 pt-4">
+                                <button type="submit" 
+                                        class="flex-1 bg-green-600 hover:bg-green-700 text-white font-semibold py-3 rounded-lg transition-colors">
+                                    Simpan Transaksi
+                                </button>
+                                <button type="button" onclick="closeTransactionForm()" 
+                                        class="flex-1 bg-gray-600 hover:bg-gray-700 text-white font-semibold py-3 rounded-lg transition-colors">
+                                    Batal
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            `;
+            
+            document.body.insertAdjacentHTML('beforeend', formHTML);
+        }
+
+        function addTransaction(event) {
+            event.preventDefault();
+            
+            const memberId = document.getElementById('newTxnMember').value;
+            const type = document.getElementById('newTxnType').value;
+            const amount = parseInt(document.getElementById('newTxnAmount').value);
+            const note = document.getElementById('newTxnNote').value || type;
+            
+            // Generate transaction ID
+            const txnId = 'TXN' + String(transactionCounter).padStart(3, '0');
+            transactionCounter++;
+            const currentDate = new Date().toLocaleDateString('id-ID');
+            
+            // Get member name from users object
+            const memberName = users[memberId] ? users[memberId].name : 'Unknown Member';
+            
+            // Determine if it's debit or credit
+            const isDebit = type === 'Angsuran Pinjaman';
+            const displayAmount = isDebit ? -amount : amount;
+            
+            // Update member balance
+            if (users[memberId]) {
+                if (type === 'Simpanan Wajib' || type === 'Simpanan Sukarela') {
+                    users[memberId].savings = (users[memberId].savings || 0) + amount;
+                } else if (type === 'Angsuran Pinjaman') {
+                    users[memberId].debt = Math.max(0, (users[memberId].debt || 0) - amount);
+                } else if (type === 'Pinjaman Baru') {
+                    users[memberId].debt = (users[memberId].debt || 0) + amount;
+                } else if (type === 'SHU') {
+                    users[memberId].shu = (users[memberId].shu || 0) + amount;
+                }
+            }
+            
+            // Add to transactions array
+            transactions.push({
+                id: txnId,
+                date: currentDate,
+                memberId: memberId,
+                memberName: memberName,
+                type: type,
+                amount: displayAmount,
+                note: note
+            });
+            
+            // Update transaction table
+            updateTransactionsTable();
+            updateAdminStats();
+            
+            // Close form and show success
+            closeTransactionForm();
+            alert(`Transaksi berhasil ditambahkan!\nNo. Transaksi: ${txnId}\nAnggota: ${memberName}\nJumlah: ${isDebit ? '-' : ''}Rp ${amount.toLocaleString('id-ID')}`);
+            
+            // Auto print receipt
+            setTimeout(() => {
+                printReceiptAdmin(type, displayAmount, currentDate, txnId, memberId, memberName);
+            }, 500);
+        }
+
+        function updateTransactionsTable() {
+            const tableBody = document.getElementById('transactionsTableBody');
+            let transactionRows = '';
+            
+            if (transactions.length === 0) {
+                transactionRows = `
+                    <tr>
+                        <td colspan="6" class="px-4 py-8 text-center text-gray-500">
+                            Belum ada transaksi. Klik "Tambah Transaksi" untuk memulai.
+                        </td>
+                    </tr>
+                `;
+            } else {
+                // Show latest transactions first
+                const sortedTransactions = [...transactions].reverse();
+                
+                sortedTransactions.forEach(txn => {
+                    const isDebit = txn.amount < 0;
+                    const typeClass = isDebit ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800';
+                    const amountClass = isDebit ? 'text-red-600' : 'text-green-600';
+                    const amountText = isDebit ? `-Rp ${Math.abs(txn.amount).toLocaleString('id-ID')}` : `Rp ${txn.amount.toLocaleString('id-ID')}`;
+                    
+                    transactionRows += `
+                        <tr>
+                            <td class="px-4 py-3">${txn.date}</td>
+                            <td class="px-4 py-3">${txn.memberId} - ${txn.memberName}</td>
+                            <td class="px-4 py-3"><span class="${typeClass} px-2 py-1 rounded-full text-xs">${txn.type}</span></td>
+                            <td class="px-4 py-3 ${amountClass}">${amountText}</td>
+                            <td class="px-4 py-3">${txn.note}</td>
+                            <td class="px-4 py-3">
+                                <button onclick="printReceiptAdmin('${txn.type}', ${txn.amount}, '${txn.date}', '${txn.id}', '${txn.memberId}', '${txn.memberName}')" 
+                                        class="text-blue-600 hover:text-blue-800 text-sm">
+                                    🖨️ Cetak
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                });
+            }
+            
+            tableBody.innerHTML = transactionRows;
+        }
+
+        function loadMemberTransactions() {
+            const memberTransactions = transactions.filter(txn => txn.memberId === currentUser.id);
+            const container = document.getElementById('memberTransactions');
+            
+            if (memberTransactions.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-8 text-gray-500">
+                        <p>Belum ada transaksi</p>
+                        <p class="text-sm">Transaksi akan muncul di sini setelah admin menambahkan data</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            let transactionHTML = '';
+            // Show latest transactions first
+            const sortedTransactions = [...memberTransactions].reverse().slice(0, 5);
+            
+            sortedTransactions.forEach(txn => {
+                const isDebit = txn.amount < 0;
+                const iconClass = isDebit ? 'bg-red-100' : 'bg-green-100';
+                const iconColor = isDebit ? 'text-red-600' : 'text-green-600';
+                const amountClass = isDebit ? 'text-red-600' : 'text-green-600';
+                const amountText = isDebit ? `-Rp ${Math.abs(txn.amount).toLocaleString('id-ID')}` : `+Rp ${txn.amount.toLocaleString('id-ID')}`;
+                
+                transactionHTML += `
+                    <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-10 h-10 ${iconClass} rounded-full flex items-center justify-center">
+                                <span class="${iconColor}">${isDebit ? '-' : '+'}</span>
+                            </div>
+                            <div>
+                                <p class="font-medium">${txn.type}</p>
+                                <p class="text-sm text-gray-600">${txn.date}</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <p class="font-bold ${amountClass}">${amountText}</p>
+                            <button onclick="printReceipt('${txn.type}', ${txn.amount}, '${txn.date}', '${txn.id}')" 
+                                    class="text-blue-600 hover:text-blue-800 text-sm">
+                                🖨️ Cetak
+                            </button>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            container.innerHTML = transactionHTML;
+        }
+
+        function loadMemberLoans() {
+            const memberLoans = loans.filter(loan => loan.memberId === currentUser.id);
+            const container = document.getElementById('memberLoans');
+            
+            if (memberLoans.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-8 text-gray-500">
+                        <p>Belum ada pinjaman aktif</p>
+                        <p class="text-sm">Hubungi admin untuk mengajukan pinjaman</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            let loanHTML = '';
+            memberLoans.forEach(loan => {
+                const progress = ((loan.originalAmount - loan.remainingAmount) / loan.originalAmount) * 100;
+                
+                loanHTML += `
+                    <div class="p-4 border border-gray-200 rounded-lg">
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="font-medium">${loan.type}</span>
+                            <span class="text-sm bg-orange-100 text-orange-800 px-2 py-1 rounded-full">Aktif</span>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4 text-sm">
+                            <div>
+                                <p class="text-gray-600">Jumlah Pinjaman</p>
+                                <p class="font-bold">Rp ${loan.originalAmount.toLocaleString('id-ID')}</p>
+                            </div>
+                            <div>
+                                <p class="text-gray-600">Sisa Hutang</p>
+                                <p class="font-bold text-red-600">Rp ${loan.remainingAmount.toLocaleString('id-ID')}</p>
+                            </div>
+                            <div>
+                                <p class="text-gray-600">Angsuran/Bulan</p>
+                                <p class="font-bold">Rp ${loan.monthlyPayment.toLocaleString('id-ID')}</p>
+                            </div>
+                            <div>
+                                <p class="text-gray-600">Sisa Tenor</p>
+                                <p class="font-bold">${loan.remainingTenor} bulan</p>
+                            </div>
+                        </div>
+                        <div class="mt-4">
+                            <div class="flex justify-between text-sm mb-1">
+                                <span>Progress Pembayaran</span>
+                                <span>${Math.round(progress)}%</span>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded-full h-2">
+                                <div class="bg-green-600 h-2 rounded-full" style="width: ${progress}%"></div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            container.innerHTML = loanHTML;
+        }
+
+        function showAddLoanForm() {
+            // Generate member options from users object
+            let memberOptions = '<option value="">Pilih Anggota</option>';
+            for (const [userId, userData] of Object.entries(users)) {
+                if (userData.type === 'member') {
+                    memberOptions += `<option value="${userId}">${userId} - ${userData.name}</option>`;
+                }
+            }
+            
+            if (memberOptions === '<option value="">Pilih Anggota</option>') {
+                alert('Belum ada anggota terdaftar. Tambahkan anggota terlebih dahulu.');
+                return;
+            }
+            
+            const formHTML = `
+                <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                    <div class="bg-white rounded-xl p-6 w-full max-w-md mx-4 max-h-screen overflow-y-auto">
+                        <h3 class="text-xl font-bold mb-4">Tambah Pinjaman Baru</h3>
+                        <form onsubmit="addLoan(event)" class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Nomor Anggota</label>
+                                <select id="newLoanMember" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500">
+                                    ${memberOptions}
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Jenis Pinjaman</label>
+                                <select id="newLoanType" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500">
+                                    <option value="">Pilih Jenis</option>
+                                    <option value="Produktif">Pinjaman Produktif</option>
+                                    <option value="Konsumtif">Pinjaman Konsumtif</option>
+                                    <option value="Darurat">Pinjaman Darurat</option>
+                                    <option value="Modal Usaha">Pinjaman Modal Usaha</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Jumlah Pinjaman (Rp)</label>
+                                <input type="number" id="newLoanAmount" required min="500000" max="50000000" 
+                                       class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500"
+                                       placeholder="Minimal Rp 500.000" oninput="updateLoanSimulation()">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Tenor (Bulan)</label>
+                                <select id="newLoanTenor" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500" onchange="updateLoanSimulation()">
+                                    <option value="">Pilih Tenor</option>
+                                    <option value="6">6 Bulan</option>
+                                    <option value="12">12 Bulan</option>
+                                    <option value="18">18 Bulan</option>
+                                    <option value="24">24 Bulan</option>
+                                    <option value="36">36 Bulan</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Bunga per Bulan (%)</label>
+                                <select id="newLoanInterest" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500" onchange="updateLoanSimulation()">
+                                    <option value="">Pilih Bunga</option>
+                                    <option value="1.5">1.5% (Produktif)</option>
+                                    <option value="2.0">2.0% (Konsumtif)</option>
+                                    <option value="1.0">1.0% (Darurat)</option>
+                                    <option value="1.8">1.8% (Modal Usaha)</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Tujuan Pinjaman</label>
+                                <textarea id="newLoanPurpose" required rows="3" 
+                                          class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500"
+                                          placeholder="Jelaskan tujuan penggunaan pinjaman"></textarea>
+                            </div>
+                            <div class="bg-gray-50 p-4 rounded-lg">
+                                <h4 class="font-semibold text-sm mb-2">Simulasi Angsuran:</h4>
+                                <div id="loanSimulation" class="text-sm text-gray-600">
+                                    Pilih jumlah, tenor, dan bunga untuk melihat simulasi
+                                </div>
+                            </div>
+                            <div class="flex space-x-4 pt-4">
+                                <button type="submit" 
+                                        class="flex-1 bg-orange-600 hover:bg-orange-700 text-white font-semibold py-3 rounded-lg transition-colors">
+                                    Setujui Pinjaman
+                                </button>
+                                <button type="button" onclick="closeLoanForm()" 
+                                        class="flex-1 bg-gray-600 hover:bg-gray-700 text-white font-semibold py-3 rounded-lg transition-colors">
+                                    Batal
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            `;
+            
+            document.body.insertAdjacentHTML('beforeend', formHTML);
+        }
+
+        function updateLoanSimulation() {
+            const amount = parseFloat(document.getElementById('newLoanAmount').value) || 0;
+            const tenor = parseInt(document.getElementById('newLoanTenor').value) || 0;
+            const interest = parseFloat(document.getElementById('newLoanInterest').value) || 0;
+            
+            if (amount > 0 && tenor > 0 && interest > 0) {
+                const monthlyInterest = interest / 100;
+                const monthlyPayment = (amount * monthlyInterest) / (1 - Math.pow(1 + monthlyInterest, -tenor));
+                const totalPayment = monthlyPayment * tenor;
+                const totalInterest = totalPayment - amount;
+                
+                const simulationHTML = `
+                    <div class="space-y-2">
+                        <div class="flex justify-between">
+                            <span>Angsuran per bulan:</span>
+                            <span class="font-bold">Rp ${Math.round(monthlyPayment).toLocaleString('id-ID')}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>Total bunga:</span>
+                            <span class="text-red-600">Rp ${Math.round(totalInterest).toLocaleString('id-ID')}</span>
+                        </div>
+                        <div class="flex justify-between border-t pt-2">
+                            <span>Total pembayaran:</span>
+                            <span class="font-bold">Rp ${Math.round(totalPayment).toLocaleString('id-ID')}</span>
+                        </div>
+                    </div>
+                `;
+                
+                document.getElementById('loanSimulation').innerHTML = simulationHTML;
+            } else {
+                document.getElementById('loanSimulation').innerHTML = 'Pilih jumlah, tenor, dan bunga untuk melihat simulasi';
+            }
+        }
+
+        function addLoan(event) {
+            event.preventDefault();
+            
+            const memberId = document.getElementById('newLoanMember').value;
+            const loanType = document.getElementById('newLoanType').value;
+            const amount = parseInt(document.getElementById('newLoanAmount').value);
+            const tenor = parseInt(document.getElementById('newLoanTenor').value);
+            const interest = parseFloat(document.getElementById('newLoanInterest').value);
+            const purpose = document.getElementById('newLoanPurpose').value;
+            
+            // Get member name from users object
+            const memberName = users[memberId] ? users[memberId].name : 'Unknown Member';
+            
+            // Calculate monthly payment
+            const monthlyInterest = interest / 100;
+            const monthlyPayment = (amount * monthlyInterest) / (1 - Math.pow(1 + monthlyInterest, -tenor));
+            
+            // Generate loan ID
+            const loanId = 'LOAN' + String(loanCounter).padStart(3, '0');
+            loanCounter++;
+            
+            // Add to loans array
+            loans.push({
+                id: loanId,
+                memberId: memberId,
+                memberName: memberName,
+                type: loanType,
+                originalAmount: amount,
+                remainingAmount: amount,
+                monthlyPayment: Math.round(monthlyPayment),
+                originalTenor: tenor,
+                remainingTenor: tenor,
+                interest: interest,
+                purpose: purpose,
+                status: 'Aktif'
+            });
+            
+            // Update member debt in users object
+            if (users[memberId]) {
+                users[memberId].debt = (users[memberId].debt || 0) + amount;
+                users[memberId].installments = tenor;
+            }
+            
+            // Update loan table
+            updateLoansTable();
+            updateAdminStats();
+            
+            // Close form and show success
+            closeLoanForm();
+            alert(`Pinjaman berhasil disetujui!\nID Pinjaman: ${loanId}\nAnggota: ${memberName}\nJumlah: Rp ${amount.toLocaleString('id-ID')}\nAngsuran: Rp ${Math.round(monthlyPayment).toLocaleString('id-ID')}/bulan`);
+        }
+
+        function updateLoansTable() {
+            const tableBody = document.getElementById('loansTableBody');
+            let loanRows = '';
+            
+            if (loans.length === 0) {
+                loanRows = `
+                    <tr>
+                        <td colspan="6" class="px-4 py-8 text-center text-gray-500">
+                            Belum ada pinjaman. Klik "Tambah Pinjaman" untuk memulai.
+                        </td>
+                    </tr>
+                `;
+            } else {
+                loans.forEach(loan => {
+                    loanRows += `
+                        <tr>
+                            <td class="px-4 py-3">${loan.memberId} - ${loan.memberName}</td>
+                            <td class="px-4 py-3">${loan.type}</td>
+                            <td class="px-4 py-3">Rp ${loan.originalAmount.toLocaleString('id-ID')}</td>
+                            <td class="px-4 py-3 text-red-600">Rp ${loan.remainingAmount.toLocaleString('id-ID')}</td>
+                            <td class="px-4 py-3">${loan.originalTenor - loan.remainingTenor}/${loan.originalTenor} bulan</td>
+                            <td class="px-4 py-3"><span class="bg-orange-100 text-orange-800 px-2 py-1 rounded-full text-xs">${loan.status}</span></td>
+                        </tr>
+                    `;
+                });
+            }
+            
+            tableBody.innerHTML = loanRows;
+        }
+
+        function updateSHU(event) {
+            event.preventDefault();
+            
+            const revenue = parseInt(document.getElementById('totalRevenue').value) || 0;
+            const costs = parseInt(document.getElementById('totalCosts').value) || 0;
+            const memberPercentage = parseInt(document.getElementById('memberPercentage').value) || 60;
+            
+            const netSHU = revenue - costs;
+            const memberSHUTotal = (netSHU * memberPercentage) / 100;
+            
+            // Count active members
+            let memberCount = 0;
+            for (const [userId, userData] of Object.entries(users)) {
+                if (userData.type === 'member') {
+                    memberCount++;
+                }
+            }
+            
+            const avgSHUPerMember = memberCount > 0 ? memberSHUTotal / memberCount : 0;
+            
+            // Update SHU for all members
+            for (const [userId, userData] of Object.entries(users)) {
+                if (userData.type === 'member') {
+                    userData.shu = Math.round(avgSHUPerMember);
+                }
+            }
+            
+            document.getElementById('netSHU').textContent = 'Rp ' + netSHU.toLocaleString('id-ID');
+            document.getElementById('memberSHUTotal').textContent = 'Rp ' + memberSHUTotal.toLocaleString('id-ID');
+            document.getElementById('avgSHUPerMember').textContent = 'Rp ' + Math.round(avgSHUPerMember).toLocaleString('id-ID');
+            document.getElementById('distributionStatus').textContent = memberCount > 0 ? 'SHU Berhasil Diupdate!' : 'Belum ada anggota';
+            
+            updateAdminStats();
+            
+            alert(`SHU berhasil dihitung dan diupdate!\nTotal Anggota: ${memberCount}\nSHU per Anggota: Rp ${Math.round(avgSHUPerMember).toLocaleString('id-ID')}`);
+        }
+
+        // Receipt Functions
+        function printReceipt(type, amount, date, txnId) {
+            const memberName = currentUser.name;
+            const memberId = currentUser.id;
+            generateReceipt(type, amount, date, txnId, memberId, memberName);
+        }
+
+        function printReceiptAdmin(type, amount, date, txnId, memberId, memberName) {
+            generateReceipt(type, amount, date, txnId, memberId, memberName);
+        }
+
+        function generateReceipt(type, amount, date, txnId, memberId, memberName) {
+            const now = new Date();
+            const printTime = now.toLocaleString('id-ID');
+            const isDebit = amount < 0;
+            const absAmount = Math.abs(amount);
+            
+            const receiptHTML = `
+                <div class="receipt-header">
+                    <h2 style="margin: 0; font-size: 18px; font-weight: bold;">KOPERASI DESA MERAH PUTIH</h2>
+                    <p style="margin: 5px 0; font-size: 12px;">Cikahuripan, Klapanunggal</p>
+                    <p style="margin: 5px 0; font-size: 12px;">Kabupaten Bogor - Jawa Barat</p>
+                    <p style="margin: 10px 0; font-size: 14px; font-weight: bold;">BUKTI TRANSAKSI</p>
+                </div>
+                
+                <div style="margin: 20px 0;">
+                    <div class="receipt-row">
+                        <span>No. Transaksi:</span>
+                        <span><strong>${txnId}</strong></span>
+                    </div>
+                    <div class="receipt-row">
+                        <span>Tanggal:</span>
+                        <span>${date}</span>
+                    </div>
+                    <div class="receipt-row">
+                        <span>Waktu Cetak:</span>
+                        <span>${printTime}</span>
+                    </div>
+                </div>
+                
+                <div class="receipt-separator"></div>
+                
+                <div style="margin: 20px 0;">
+                    <div class="receipt-row">
+                        <span>No. Anggota:</span>
+                        <span><strong>${memberId}</strong></span>
+                    </div>
+                    <div class="receipt-row">
+                        <span>Nama Anggota:</span>
+                        <span><strong>${memberName}</strong></span>
+                    </div>
+                </div>
+                
+                <div class="receipt-separator"></div>
+                
+                <div style="margin: 20px 0;">
+                    <div class="receipt-row">
+                        <span>Jenis Transaksi:</span>
+                        <span><strong>${type}</strong></span>
+                    </div>
+                    <div class="receipt-row">
+                        <span>Tipe:</span>
+                        <span><strong>${isDebit ? 'DEBIT (-)' : 'KREDIT (+)'}</strong></span>
+                    </div>
+                </div>
+                
+                <div class="receipt-total">
+                    <div class="receipt-row" style="font-size: 16px;">
+                        <span>JUMLAH:</span>
+                        <span><strong>Rp ${absAmount.toLocaleString('id-ID')}</strong></span>
+                    </div>
+                </div>
+                
+                <div style="margin: 30px 0; text-align: center; font-size: 12px;">
+                    <p>Terbilang:</p>
+                    <p style="font-style: italic; margin: 10px 0;">${numberToWords(absAmount)} Rupiah</p>
+                </div>
+                
+                <div class="receipt-separator"></div>
+                
+                <div style="margin: 30px 0;">
+                    <div style="display: flex; justify-content: space-between;">
+                        <div style="text-align: center; width: 45%;">
+                            <p style="margin: 0;">Anggota</p>
+                            <div style="height: 60px;"></div>
+                            <p style="margin: 0; border-top: 1px solid #000; padding-top: 5px;">${memberName}</p>
+                        </div>
+                        <div style="text-align: center; width: 45%;">
+                            <p style="margin: 0;">Petugas</p>
+                            <div style="height: 60px;"></div>
+                            <p style="margin: 0; border-top: 1px solid #000; padding-top: 5px;">(_________________)</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div style="margin-top: 40px; text-align: center; font-size: 10px; color: #666;">
+                    <p>Bukti ini sah tanpa tanda tangan basah</p>
+                    <p>Simpan bukti ini sebagai arsip</p>
+                    <p>Terima kasih atas kepercayaan Anda</p>
+                </div>
+            `;
+            
+            document.getElementById('receiptPaper').innerHTML = receiptHTML;
+            document.getElementById('receiptModal').classList.remove('hidden');
+        }
+
+        function printReceiptPaper() {
+            window.print();
+        }
+
+        function downloadReceiptPDF() {
+            // Simple PDF generation using print functionality
+            const originalTitle = document.title;
+            document.title = 'Bukti_Transaksi_' + new Date().getTime();
+            
+            // Trigger print dialog which can save as PDF
+            window.print();
+            
+            document.title = originalTitle;
+            alert('Gunakan opsi "Save as PDF" di dialog print untuk menyimpan sebagai PDF');
+        }
+
+        function closeReceiptModal() {
+            document.getElementById('receiptModal').classList.add('hidden');
+        }
+
+        function numberToWords(num) {
+            const ones = ['', 'satu', 'dua', 'tiga', 'empat', 'lima', 'enam', 'tujuh', 'delapan', 'sembilan'];
+            const teens = ['sepuluh', 'sebelas', 'dua belas', 'tiga belas', 'empat belas', 'lima belas', 'enam belas', 'tujuh belas', 'delapan belas', 'sembilan belas'];
+            const tens = ['', '', 'dua puluh', 'tiga puluh', 'empat puluh', 'lima puluh', 'enam puluh', 'tujuh puluh', 'delapan puluh', 'sembilan puluh'];
+            
+            if (num === 0) return 'nol';
+            if (num < 10) return ones[num];
+            if (num < 20) return teens[num - 10];
+            if (num < 100) return tens[Math.floor(num / 10)] + (num % 10 ? ' ' + ones[num % 10] : '');
+            if (num < 1000) return ones[Math.floor(num / 100)] + ' ratus' + (num % 100 ? ' ' + numberToWords(num % 100) : '');
+            if (num < 1000000) return numberToWords(Math.floor(num / 1000)) + ' ribu' + (num % 1000 ? ' ' + numberToWords(num % 1000) : '');
+            if (num < 1000000000) return numberToWords(Math.floor(num / 1000000)) + ' juta' + (num % 1000000 ? ' ' + numberToWords(num % 1000000) : '');
+            
+            return 'angka terlalu besar';
+        }
+
+        // Report Generation Functions
+        function generateReport(type) {
+            const reportContent = document.getElementById('reportContent');
+            const reportTitle = document.getElementById('reportTitle');
+            const reportData = document.getElementById('reportData');
+            
+            reportContent.classList.remove('hidden');
+            
+            switch(type) {
+                case 'monthly':
+                    reportTitle.textContent = 'Laporan Bulanan - ' + new Date().toLocaleDateString('id-ID', { year: 'numeric', month: 'long' });
+                    reportData.innerHTML = generateMonthlyReport();
+                    break;
+                case 'member':
+                    reportTitle.textContent = 'Laporan Data Anggota';
+                    reportData.innerHTML = generateMemberReport();
+                    break;
+                case 'loan':
+                    reportTitle.textContent = 'Laporan Status Pinjaman';
+                    reportData.innerHTML = generateLoanReport();
+                    break;
+            }
+        }
+
+        function generateMonthlyReport() {
+            let totalTransactions = transactions.length;
+            let totalSavingsTransactions = 0;
+            let totalLoanTransactions = 0;
+            let totalSavingsAmount = 0;
+            let totalLoanAmount = 0;
+            
+            transactions.forEach(txn => {
+                if (txn.type.includes('Simpanan')) {
+                    totalSavingsTransactions++;
+                    totalSavingsAmount += Math.abs(txn.amount);
+                } else if (txn.type.includes('Pinjaman') || txn.type.includes('Angsuran')) {
+                    totalLoanTransactions++;
+                    totalLoanAmount += Math.abs(txn.amount);
+                }
+            });
+            
+            return `
+                <div class="space-y-6">
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                        <div class="bg-blue-50 p-4 rounded-lg">
+                            <h4 class="font-semibold text-blue-800">Total Transaksi</h4>
+                            <p class="text-2xl font-bold text-blue-600">${totalTransactions}</p>
+                        </div>
+                        <div class="bg-green-50 p-4 rounded-lg">
+                            <h4 class="font-semibold text-green-800">Transaksi Simpanan</h4>
+                            <p class="text-2xl font-bold text-green-600">${totalSavingsTransactions}</p>
+                        </div>
+                        <div class="bg-orange-50 p-4 rounded-lg">
+                            <h4 class="font-semibold text-orange-800">Transaksi Pinjaman</h4>
+                            <p class="text-2xl font-bold text-orange-600">${totalLoanTransactions}</p>
+                        </div>
+                        <div class="bg-purple-50 p-4 rounded-lg">
+                            <h4 class="font-semibold text-purple-800">Total Nilai</h4>
+                            <p class="text-2xl font-bold text-purple-600">Rp ${(totalSavingsAmount + totalLoanAmount).toLocaleString('id-ID')}</p>
+                        </div>
+                    </div>
+                    
+                    ${transactions.length > 0 ? `
+                    <table class="w-full text-sm border border-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-4 py-3 text-left border">Tanggal</th>
+                                <th class="px-4 py-3 text-left border">Anggota</th>
+                                <th class="px-4 py-3 text-left border">Jenis Transaksi</th>
+                                <th class="px-4 py-3 text-left border">Jumlah</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${transactions.map(txn => `
+                                <tr>
+                                    <td class="px-4 py-3 border">${txn.date}</td>
+                                    <td class="px-4 py-3 border">${txn.memberId} - ${txn.memberName}</td>
+                                    <td class="px-4 py-3 border">${txn.type}</td>
+                                    <td class="px-4 py-3 border ${txn.amount < 0 ? 'text-red-600' : 'text-green-600'}">
+                                        ${txn.amount < 0 ? '-' : ''}Rp ${Math.abs(txn.amount).toLocaleString('id-ID')}
+                                    </td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                    ` : '<p class="text-center text-gray-500 py-8">Belum ada transaksi bulan ini</p>'}
+                </div>
+            `;
+        }
+
+        function generateMemberReport() {
+            let memberRows = '';
+            let totalSavings = 0;
+            let totalDebt = 0;
+            let activeMembers = 0;
+            
+            for (const [memberId, memberData] of Object.entries(users)) {
+                if (memberData.type === 'member') {
+                    activeMembers++;
+                    totalSavings += memberData.savings || 0;
+                    totalDebt += memberData.debt || 0;
+                    
+                    memberRows += `
+                        <tr>
+                            <td class="px-4 py-3 border">${memberId}</td>
+                            <td class="px-4 py-3 border">${memberData.name}</td>
+                            <td class="px-4 py-3 border">${memberData.phone || '-'}</td>
+                            <td class="px-4 py-3 border text-green-600">Rp ${(memberData.savings || 0).toLocaleString('id-ID')}</td>
+                            <td class="px-4 py-3 border text-red-600">Rp ${(memberData.debt || 0).toLocaleString('id-ID')}</td>
+                            <td class="px-4 py-3 border">
+                                <span class="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs">Aktif</span>
+                            </td>
+                        </tr>
+                    `;
+                }
+            }
+            
+            return `
+                <div class="space-y-6">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div class="bg-blue-50 p-4 rounded-lg">
+                            <h4 class="font-semibold text-blue-800">Total Anggota Aktif</h4>
+                            <p class="text-2xl font-bold text-blue-600">${activeMembers}</p>
+                        </div>
+                        <div class="bg-green-50 p-4 rounded-lg">
+                            <h4 class="font-semibold text-green-800">Total Simpanan</h4>
+                            <p class="text-2xl font-bold text-green-600">Rp ${totalSavings.toLocaleString('id-ID')}</p>
+                        </div>
+                        <div class="bg-red-50 p-4 rounded-lg">
+                            <h4 class="font-semibold text-red-800">Total Pinjaman</h4>
+                            <p class="text-2xl font-bold text-red-600">Rp ${totalDebt.toLocaleString('id-ID')}</p>
+                        </div>
+                    </div>
+                    
+                    ${activeMembers > 0 ? `
+                    <table class="w-full text-sm border border-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-4 py-3 text-left border">No. Anggota</th>
+                                <th class="px-4 py-3 text-left border">Nama</th>
+                                <th class="px-4 py-3 text-left border">Telepon</th>
+                                <th class="px-4 py-3 text-left border">Simpanan</th>
+                                <th class="px-4 py-3 text-left border">Pinjaman</th>
+                                <th class="px-4 py-3 text-left border">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${memberRows}
+                        </tbody>
+                    </table>
+                    ` : '<p class="text-center text-gray-500 py-8">Belum ada anggota terdaftar</p>'}
+                </div>
+            `;
+        }
+
+        function generateLoanReport() {
+            const activeLoans = loans.filter(loan => loan.status === 'Aktif').length;
+            const completedLoans = loans.filter(loan => loan.status === 'Lunas').length;
+            const overdueLoans = loans.filter(loan => loan.status === 'Terlambat').length;
+            const totalOutstanding = loans.reduce((sum, loan) => sum + loan.remainingAmount, 0);
+            
+            return `
+                <div class="space-y-6">
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                        <div class="bg-orange-50 p-4 rounded-lg">
+                            <h4 class="font-semibold text-orange-800">Pinjaman Aktif</h4>
+                            <p class="text-2xl font-bold text-orange-600">${activeLoans}</p>
+                        </div>
+                        <div class="bg-green-50 p-4 rounded-lg">
+                            <h4 class="font-semibold text-green-800">Pinjaman Lunas</h4>
+                            <p class="text-2xl font-bold text-green-600">${completedLoans}</p>
+                        </div>
+                        <div class="bg-red-50 p-4 rounded-lg">
+                            <h4 class="font-semibold text-red-800">Tunggakan</h4>
+                            <p class="text-2xl font-bold text-red-600">${overdueLoans}</p>
+                        </div>
+                        <div class="bg-blue-50 p-4 rounded-lg">
+                            <h4 class="font-semibold text-blue-800">Total Outstanding</h4>
+                            <p class="text-2xl font-bold text-blue-600">Rp ${totalOutstanding.toLocaleString('id-ID')}</p>
+                        </div>
+                    </div>
+                    
+                    ${loans.length > 0 ? `
+                    <table class="w-full text-sm border border-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-4 py-3 text-left border">Anggota</th>
+                                <th class="px-4 py-3 text-left border">Jenis</th>
+                                <th class="px-4 py-3 text-left border">Jumlah Pinjaman</th>
+                                <th class="px-4 py-3 text-left border">Sisa Hutang</th>
+                                <th class="px-4 py-3 text-left border">Angsuran</th>
+                                <th class="px-4 py-3 text-left border">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${loans.map(loan => `
+                                <tr>
+                                    <td class="px-4 py-3 border">${loan.memberId} - ${loan.memberName}</td>
+                                    <td class="px-4 py-3 border">${loan.type}</td>
+                                    <td class="px-4 py-3 border">Rp ${loan.originalAmount.toLocaleString('id-ID')}</td>
+                                    <td class="px-4 py-3 border text-red-600">Rp ${loan.remainingAmount.toLocaleString('id-ID')}</td>
+                                    <td class="px-4 py-3 border">Rp ${loan.monthlyPayment.toLocaleString('id-ID')}</td>
+                                    <td class="px-4 py-3 border">
+                                        <span class="bg-${loan.status === 'Aktif' ? 'green' : loan.status === 'Lunas' ? 'blue' : 'red'}-100 text-${loan.status === 'Aktif' ? 'green' : loan.status === 'Lunas' ? 'blue' : 'red'}-800 px-2 py-1 rounded-full text-xs">
+                                            ${loan.status}
+                                        </span>
+                                    </td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                    ` : '<p class="text-center text-gray-500 py-8">Belum ada pinjaman</p>'}
+                </div>
+            `;
+        }
+
+        function printReport() {
+            const reportContent = document.getElementById('reportContent');
+            const reportTitle = document.getElementById('reportTitle').textContent;
+            
+            const printWindow = window.open('', '_blank');
+            printWindow.document.write(`
+                <html>
+                <head>
+                    <title>${reportTitle}</title>
+                    <style>
+                        body { font-family: Arial, sans-serif; margin: 20px; }
+                        .header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #000; padding-bottom: 20px; }
+                        table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+                        th, td { border: 1px solid #000; padding: 8px; text-align: left; }
+                        th { background-color: #f5f5f5; }
+                        .stats { display: flex; justify-content: space-around; margin: 20px 0; }
+                        .stat-box { text-align: center; padding: 15px; border: 1px solid #ccc; }
+                        @media print { .no-print { display: none; } }
+                    </style>
+                </head>
+                <body>
+                    <div class="header">
+                        <h1>KOPERASI DESA MERAH PUTIH</h1>
+                        <p>Cikahuripan, Klapanunggal, Bogor - Jawa Barat</p>
+                        <h2>${reportTitle}</h2>
+                        <p>Dicetak pada: ${new Date().toLocaleString('id-ID')}</p>
+                    </div>
+                    ${document.getElementById('reportData').innerHTML}
+                </body>
+                </html>
+            `);
+            printWindow.document.close();
+            printWindow.print();
+        }
+
+        function exportReport() {
+            alert('Fitur export PDF sedang dalam pengembangan. Gunakan Print untuk menyimpan sebagai PDF.');
+            printReport();
+        }
+
+        // Helper functions
+        function closeMemberForm() {
+            const form = document.querySelector('.fixed.inset-0');
+            if (form) {
+                form.remove();
+            }
+        }
+
+        function closeTransactionForm() {
+            const form = document.querySelector('.fixed.inset-0');
+            if (form) {
+                form.remove();
+            }
+        }
+
+        function closeLoanForm() {
+            const form = document.querySelector('.fixed.inset-0');
+            if (form) {
+                form.remove();
+            }
+        }
+
+        function closeEditForm() {
+            const form = document.querySelector('.edit-member-form');
+            if (form) {
+                form.remove();
+            }
+        }
+
+        // Close modal when clicking outside
+        document.getElementById('receiptModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeReceiptModal();
+            }
+        });
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'989c1e02632b0fad',t:'MTc1OTY1ODkwMS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
